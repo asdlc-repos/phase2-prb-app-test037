@@ -1,0 +1,25 @@
+{
+  "overview": "A single lightweight backend service exposing a REST API that returns the current server time in JSON format. The service uses Go with net/http for simplicity and performance, runs on port 9090, and provides a /time endpoint alongside a /health endpoint for monitoring.",
+  "requirements": [
+    "The service must expose a GET /time endpoint that returns the current server time",
+    "The response must be in JSON format with a timestamp field containing the current date and time",
+    "The service must return HTTP 200 status code for valid requests",
+    "The service must expose a GET /health endpoint for health checks",
+    "The service must run on port 9090 and accept HTTP requests",
+    "The timestamp must use ISO 8601 format for consistency"
+  ],
+  "components": [
+    {
+      "name": "time-service",
+      "componentType": "service",
+      "language": "Go",
+      "dependsOn": [],
+      "entrypoint": "deployment/service",
+      "buildpack": "docker",
+      "appPath": "/time-service",
+      "openAPISpec": "openapi: 3.0.3\ninfo:\n  title: Time Service API\n  description: A minimal API service that returns the current server time\n  version: 1.0.0\nservers:\n  - url: http://localhost:9090\n    description: Local development server\npaths:\n  /time:\n    get:\n      summary: Get current server time\n      description: Returns the current server time in JSON format with ISO 8601 timestamp\n      operationId: getCurrentTime\n      responses:\n        '200':\n          description: Successfully retrieved current time\n          content:\n            application/json:\n              schema:\n                type: object\n                properties:\n                  timestamp:\n                    type: string\n                    format: date-time\n                    description: Current server time in ISO 8601 format\n                    example: '2024-01-15T14:30:45Z'\n                required:\n                  - timestamp\n        '500':\n          description: Internal server error\n          content:\n            application/json:\n              schema:\n                type: object\n                properties:\n                  error:\n                    type: string\n                    example: Internal server error\n  /health:\n    get:\n      summary: Health check endpoint\n      description: Returns the health status of the service\n      operationId: healthCheck\n      responses:\n        '200':\n          description: Service is healthy\n          content:\n            application/json:\n              schema:\n                type: object\n                properties:\n                  status:\n                    type: string\n                    example: ok\n                required:\n                  - status",
+      "componentAgentInstructions": "Implement a minimal Go HTTP service using the standard net/http package. The service must listen on port 9090 and expose two endpoints: GET /time and GET /health. For the /time endpoint, use time.Now().UTC().Format(time.RFC3339) to generate an ISO 8601 timestamp, wrap it in a JSON object with a 'timestamp' field, set Content-Type to application/json, and return HTTP 200. For the /health endpoint, return a JSON object with a 'status' field set to 'ok' and HTTP 200. Use json.NewEncoder to encode responses. Include error handling for JSON encoding failures returning HTTP 500. Use http.HandleFunc to register routes and http.ListenAndServe to start the server. Create a Dockerfile using golang:1.21-alpine as the build stage, copy go.mod and go.sum if present (or just copy main.go if no modules), build the binary with CGO_ENABLED=0, then use a scratch or alpine:latest final image to run the binary. Expose port 9090 in the Dockerfile. The main.go should be at the root of /time-service directory. Log startup messages to stdout indicating the server is listening on port 9090. Handle graceful shutdown if needed but keep it minimal. Ensure all responses have proper Content-Type headers and JSON is properly formatted. The timestamp must always be in UTC timezone using RFC3339 format which is ISO 8601 compliant."
+    }
+  ],
+  "sourceSpec": "spec-v1"
+}
